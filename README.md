@@ -28,4 +28,11 @@ npm test                 # 單元 + 記憶體 MongoDB 整合測試
 PORT=15202 npm run dev:local   # 示範資料(記憶體 MongoDB);GigaItApp 以 OBSERVE_LOCAL=http://localhost:15202 npm run dev 連過來
 ```
 
+## 文件
+
+- [維運手冊 docs/OPERATIONS.md](docs/OPERATIONS.md):部署、Key、新增服務、保存、故障排除、正式區
+- [接入手冊 docs/INTEGRATION_GUIDE.md](docs/INTEGRATION_GUIDE.md):服務怎麼回報(SDK / Ingest API)
+- [API 規格 docs/API_CONTRACT.md](docs/API_CONTRACT.md)
+- 使用手冊:`../GigaItApp/docs/OBSERVE-MANUAL.md`
+
 AI 協作規則見 [AGENT.md](AGENT.md)。

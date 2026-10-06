@@ -19,6 +19,32 @@
 
 ---
 
+## 2026-10-06｜由 DevOpsDiagram 複製改造為 giga-observe(GigaNexus W9-8)
+
+**需求來源**:Gateway `docs/MONITORING-PLAN.md` D2、D9–D13
+
+**內容**
+
+| 區塊 | 產出 |
+|------|------|
+| 隔離 | `OBSERVE_ENV`;DB `giga_observe_{env}`、Redis 前綴 `gno-{env}`、compose 專案名與資料目錄依部署區;port 51202 / 51203;移除自帶前端 |
+| 認證 | 查詢接受 Gateway BFF 的 `X-Internal-Token`(JWKS 驗證,只給 read);Key 前綴 `gno_`;新 scope `ingest-web` |
+| Ingest | 紀錄可帶 `meta`(平面標籤);`kind: web`;`POST /ingest/traffic`(Nginx 每分鐘彙總,同分鐘冪等);`POST /ingest/web-events`(前端事件,僅拓樸中的前端) |
+| 查詢 | `/stats/today`、`/stats/upstreams`、`/alerts`(即時計算)、`/traffic`、`/traffic/top-ips`、`/web/vitals`;紀錄可依 `traceId` 查;`GET /openapi.json` 供 Gateway 匯入 |
+| 保存 | 錯誤 body 90 天後裁成 1 KB 摘要;流量與前端效能 90 天 TTL |
+| 穩定性 | Redis 不可用時統計改由 Mongo 計算;Nginx 節點統計由流量彙總計算 |
+| 本機 | `npm run dev:local`(記憶體 MongoDB + 示範資料) |
+
+**修改**:`backend/src/{index,gatewayOpenapi}.js`、`backend/src/services/{traffic,web,stats,alert,retention,ingest,query,status,apiKey}Service.js`、`backend/src/routes/{ingest,query,web}.js`、`backend/src/middlewares/apiKeyAuth.js`、`backend/src/config/{env,redis}.js`、`backend/src/scripts/{initIndexes,devLocal,demoData}.js`、`backend/config/topology.json`、`docker-compose.yml`、`deploy/*.example`、`backup/backup.sh`;刪除 `frontend/`
+
+**驗證**:jest 110 項(含記憶體 MongoDB 整合測試 7 項)通過;OpenAPI 經 BFF 解析器檢查 13 條路由無錯誤;主機 2 測試區部署後 `/health` 正常、Gateway 發佈路由版本 37、BFF / Nginx / itapp-api / 前端事件皆有資料
+
+**影響範圍**:新回報來源(nginx-log-agent、BFF 前端事件轉送);舊系統不接入(D11)
+
+**文件同步**:`INTEGRATION_GUIDE.md` 改寫為 GigaNexus 版;新增 `OPERATIONS.md` 維運手冊;`README.md`
+
+---
+
 ## 2026-09-18｜M1~M3 初版實作：後端、前端、SDK、備份
 
 **需求來源**：PRD 全部、D-01 ~ D-08、US-01 ~ US-06
