@@ -1,0 +1,7 @@
+{
+  "name": "devops-reporter",
+  "version": "1.0.0",
+  "description": "DevOpsDiagram 回報 SDK — 無外部相依，可整個資料夾複製進任何 Node 專案",
+  "main": "index.js",
+  "license": "ISC"
+}

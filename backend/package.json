@@ -1,0 +1,32 @@
+{
+  "name": "giga-observe-backend",
+  "version": "1.1.0",
+  "description": "giga-observe 觀測服務後端(由 DevOpsDiagram 複製改造;MONITORING-PLAN.md)",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "jest --runInBand",
+    "init-indexes": "node src/scripts/initIndexes.js",
+    "create-key": "node src/scripts/createApiKey.js",
+    "dev:local": "node src/scripts/devLocal.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "ioredis": "^5.4.1",
+    "jose": "^6.2.12",
+    "mongodb": "^6.8.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "mongodb-memory-server": "^10.4.3",
+    "nodemon": "^3.1.4",
+    "supertest": "^7.0.0"
+  },
+  "license": "ISC",
+  "gateway": {
+    "project": "giga-observe"
+  }
+}

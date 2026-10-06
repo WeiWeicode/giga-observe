@@ -1,0 +1,72 @@
+# giga-observe — 觀測服務(MONITORING-PLAN.md;由 DevOpsDiagram 複製改造)
+#
+# 每個部署區一套,資料完全隔離(D2):compose 專案名、資料目錄、MongoDB 資料庫名稱、Redis 前綴、API Key 都依 OBSERVE_ENV 分開。
+#   測試區(主機 2):docker compose --env-file deploy/test.env up -d --build
+#   正式區(主機 3):docker compose --env-file deploy/prod.env up -d --build
+#
+# 網路:
+#   gno-backend 加入 Gateway 的 Docker 網路(GW_NETWORK,預設 giganexus-gw_default),別名 observe-api:
+#     BFF 以 http://observe-api:51202 轉送 GigaItApp 的查詢(X-Internal-Token)、轉送前端事件;
+#     同網路的後端(itapp-api、node-sample…)以同一位址送 Ingest。
+#   gno-mongo / gno-redis 只在本專案內部網路,不宣告 ports(AGENT.md §9.1)。
+#   51202 / 51203 預設只綁主機本機(OBSERVE_BIND),不對外。
+
+name: giga-observe-${OBSERVE_ENV:?OBSERVE_ENV 必須設定(test / prod)}
+
+services:
+  gno-backend:
+    build: ./backend
+    env_file:
+      - ./backend/.env.${OBSERVE_ENV}
+    environment:
+      OBSERVE_ENV: ${OBSERVE_ENV}
+    ports:
+      - '${OBSERVE_BIND:-127.0.0.1}:51202:51202'   # Ingest + Query + Admin API
+      - '${OBSERVE_BIND:-127.0.0.1}:51203:51203'   # SSE(內網)
+    volumes:
+      # 改完 topology 呼叫 /admin/topology/reload 即可生效(不用重建映像)
+      - ./backend/config:/usr/src/app/config
+    depends_on:
+      - gno-mongo
+      - gno-redis
+    restart: unless-stopped
+    networks:
+      default:
+      gateway:
+        aliases:
+          - observe-api
+
+  gno-mongo:
+    image: mongo:7
+    env_file:
+      - ./backend/.env.${OBSERVE_ENV}
+    volumes:
+      - ./data/${OBSERVE_ENV}/mongo:/data/db
+    restart: unless-stopped
+
+  gno-redis:
+    image: redis:7-alpine
+    command: >
+      sh -c 'redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"'
+    env_file:
+      - ./backend/.env.${OBSERVE_ENV}
+    volumes:
+      - ./data/${OBSERVE_ENV}/redis:/data
+    restart: unless-stopped
+
+  gno-backup:
+    build: ./backup
+    env_file:
+      - ./backend/.env.${OBSERVE_ENV}
+    environment:
+      OBSERVE_ENV: ${OBSERVE_ENV}
+    volumes:
+      - ./backup/archives/${OBSERVE_ENV}:/backup
+    depends_on:
+      - gno-mongo
+    restart: unless-stopped
+
+networks:
+  gateway:
+    external: true
+    name: ${GW_NETWORK:-giganexus-gw_default}
