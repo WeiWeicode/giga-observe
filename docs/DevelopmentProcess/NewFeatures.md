@@ -19,6 +19,22 @@
 
 ---
 
+## 2026-10-07｜架構圖加入 RustIt 端點管理
+
+**需求來源**:需求方要求架構觀測顯示端點管理 API 與 Agent WebSocket(RustIt INTEGRATION-PLAN M4 之後)
+
+**內容**:拓樸新增 `endpoint-api`(管理 API,探測 `http://endpoint-server:51240/healthz`)、`endpoint-agent`(Agent 通道 :51241,臨時 TLS 憑證不探測、以心跳判定)、`ita-sqlserver` / `ita-mongo` / `ita-redis`,與 7 條連線(`gw-bff → endpoint-api`、`gw-nginx → endpoint-agent`、兩個服務 → 三種儲存)。WebSocket 以紀錄 `method: WS`(每條連線關閉時一筆,`meta` 帶 closeCode / messages / online)與心跳 `deps` 的「WebSocket 在線 N 條」呈現,**不需改 giga-observe 程式**。
+
+**修改**:`backend/config/topology.json`
+
+**驗證**:主機 2 以 bundle 更新、重啟 gno-backend,載入 18 個服務、19 條連線;兩把 ingest Key 建立後,`endpoint-api` / `endpoint-agent` 皆 healthy,`endpoint-agent` 收到 `POST /agent/v1/inventory`(來源 IP 為電腦實際 IP)。
+
+**影響範圍**:RustIt ItAgentBack(0ebf47a)、Gateway `agent.conf` 加 `X-Forwarded-For`(40d633a)
+
+**文件同步**:OPERATIONS §4.1 Key 清單
+
+---
+
 ## 2026-10-06｜由 DevOpsDiagram 複製改造為 giga-observe(GigaNexus W9-8)
 
 **需求來源**:Gateway `docs/MONITORING-PLAN.md` D2、D9–D13

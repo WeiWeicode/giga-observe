@@ -66,7 +66,7 @@ Key 明文**只顯示一次**,直接寫進該服務的 Docker secret 檔(擁有�
 | `read` | 直接查詢 API(一般經 BFF,不需要) |
 | `admin` | Key 管理、拓樸重載 |
 
-目前測試區的 Key:`gw-bff`、`gw-bff-web`、`gw-nginx`(Gateway 機密目錄)、`itapp-api`(`/srv/giganexus/itapp-secrets/monitor_api_key`)、`gno-backup`(`.env.test`)。
+目前測試區的 Key:`gw-bff`、`gw-bff-web`、`gw-nginx`(Gateway 機密目錄)、`itapp-api`(`/srv/giganexus/itapp-secrets/monitor_api_key`)、`endpoint-api` / `endpoint-agent`(`/srv/giganexus/ita-secrets/monitor_api_key`、`agent_monitor_api_key`,由 RustIt `ItAgentBack/deploy/host2-set-secrets.sh` 建立)、`gno-backup`(`.env.test`)。
 
 ### 4.2 登錄到拓樸
 
