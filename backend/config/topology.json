@@ -168,6 +168,71 @@
       "status": "active",
       "links": {},
       "monitor": { "enabled": false }
+    },
+    {
+      "id": "endpoint-api",
+      "name": "端點管理 API",
+      "type": "backend",
+      "layer": "api",
+      "description": "RustIt ItAgentBack 管理 API(/api/endpoint/* 經 BFF:電腦清單、詳情)",
+      "stack": ["Node.js 22", "Fastify 5"],
+      "team": "IT",
+      "owner": "—",
+      "status": "active",
+      "links": { "repo": "RustIt/ItAgentBack" },
+      "monitor": { "healthUrl": "http://endpoint-server:51240/healthz", "enabled": true }
+    },
+    {
+      "id": "endpoint-agent",
+      "name": "端點 Agent 通道",
+      "type": "backend",
+      "layer": "api",
+      "description": "RustIt ItAgentBack :51241(Gateway :9443 mTLS 轉入):HTTPS 回報逐筆、WebSocket 每條連線關閉時一筆(method WS);心跳附在線連線數。TLS 為臨時憑證,不主動探測,以心跳判定",
+      "stack": ["Node.js 22", "Fastify 5", "WebSocket"],
+      "team": "IT",
+      "owner": "—",
+      "status": "active",
+      "links": { "repo": "RustIt/ItAgentBack" },
+      "monitor": { "enabled": false }
+    },
+    {
+      "id": "ita-sqlserver",
+      "name": "端點資料庫",
+      "type": "database",
+      "layer": "data",
+      "description": "SQL Server 2012 giganexus_It_Agent(測試區 _test):裝置、最新資產、網卡、稽核;唯一真相",
+      "stack": ["SQL Server 2012"],
+      "team": "IT",
+      "owner": "—",
+      "status": "active",
+      "links": { "repo": "RustIt/ItAgentBack/db" },
+      "monitor": { "enabled": false }
+    },
+    {
+      "id": "ita-mongo",
+      "name": "端點快照歷史",
+      "type": "database",
+      "layer": "data",
+      "description": "ItAgentBack 的 MongoDB 7(ita-mongo):每次回報的快照歷史,保留 90 天",
+      "stack": ["MongoDB 7"],
+      "team": "IT",
+      "owner": "—",
+      "status": "active",
+      "links": { "repo": "RustIt/ItAgentBack" },
+      "monitor": { "enabled": false }
+    },
+    {
+      "id": "ita-redis",
+      "name": "端點在線狀態",
+      "type": "cache",
+      "layer": "data",
+      "description": "ItAgentBack 的 Redis 7(ita-redis):在線狀態與內容 hash",
+      "stack": ["Redis 7"],
+      "team": "IT",
+      "owner": "—",
+      "status": "active",
+      "links": { "repo": "RustIt/ItAgentBack" },
+      "monitor": { "enabled": false }
     }
   ],
   "edges": [
@@ -182,6 +247,13 @@
     { "from": "gw-worker", "to": "gw-redis", "label": "佇列" },
     { "from": "observe-api", "to": "gno-mongo", "label": "儲存" },
     { "from": "observe-api", "to": "gno-redis", "label": "快取" },
-    { "from": "gno-backup", "to": "gno-mongo", "label": "mongodump" }
+    { "from": "gno-backup", "to": "gno-mongo", "label": "mongodump" },
+    { "from": "gw-bff", "to": "endpoint-api", "label": "/api/endpoint/*" },
+    { "from": "gw-nginx", "to": "endpoint-agent", "label": ":9443 Agent" },
+    { "from": "endpoint-api", "to": "ita-sqlserver", "label": "資料" },
+    { "from": "endpoint-api", "to": "ita-redis", "label": "在線" },
+    { "from": "endpoint-agent", "to": "ita-sqlserver", "label": "資料" },
+    { "from": "endpoint-agent", "to": "ita-mongo", "label": "快照" },
+    { "from": "endpoint-agent", "to": "ita-redis", "label": "在線" }
   ]
 }
