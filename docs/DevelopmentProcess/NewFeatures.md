@@ -19,6 +19,22 @@
 
 ---
 
+## 2026-10-08｜架構圖加入附件服務(giga-file-service)
+
+**需求來源**:架構觀測顯示「有服務在回報但未登錄到架構圖:file-api」,需求方要求補上
+
+**內容**:拓樸新增 `file-api`(附件服務,探測 `http://file-api:51272/healthz`)、`file-storage`(附件實體檔:WSL + NAS,不探測)、`bpm-attachments`(BPM 附件來源:NaNa + 5144,191 / 190,不探測;5144 另有 CheckService 監看),與 5 條連線(`gw-bff → file-api` /api/file/*、`gw-nginx → file-api` 上傳直送、`file-api → gw-sqlserver` file_svc、`file-api → file-storage`、`file-api → bpm-attachments`)。**不需改 giga-observe 程式**(`storage` 類型畫面已支援)
+
+**修改**:`backend/config/topology.json`
+
+**驗證**:backend 測試 110 通過;主機 2 以 bundle 更新(ab1de05)、重啟 gno-backend,載入 21 個服務、24 條連線;GigaItApp「架構觀測」不再出現未登錄警告,正常 11 → 12(file-api)、未回報 6 → 8(兩個不探測的儲存節點)
+
+**影響範圍**:file-api 的 ingest Key 已於 giga-file-service 部署時建立(`/srv/giganexus/file-secrets/monitor_api_key`)
+
+**文件同步**:OPERATIONS §4.1 Key 清單
+
+---
+
 ## 2026-10-07｜架構圖加入 RustIt 端點管理
 
 **需求來源**:需求方要求架構觀測顯示端點管理 API 與 Agent WebSocket(RustIt INTEGRATION-PLAN M4 之後)
