@@ -233,6 +233,45 @@
       "status": "active",
       "links": { "repo": "RustIt/ItAgentBack" },
       "monitor": { "enabled": false }
+    },
+    {
+      "id": "file-api",
+      "name": "附件服務",
+      "type": "backend",
+      "layer": "api",
+      "description": "giga-file-service file-api:/api/file/* 經 BFF;上傳 POST /api/file/files 由 Nginx auth_request 直送(單檔 30 MB);每 5 分鐘補傳 NAS;BPM 表單附件唯讀代理(測試區 191 / 正式區 190)",
+      "stack": ["Node.js 22", "Fastify 5", "Drizzle ORM"],
+      "team": "IT",
+      "owner": "—",
+      "status": "active",
+      "links": { "repo": "giga-file-service/file-api" },
+      "monitor": { "healthUrl": "http://file-api:51272/healthz", "enabled": true }
+    },
+    {
+      "id": "file-storage",
+      "name": "附件實體檔",
+      "type": "storage",
+      "layer": "data",
+      "description": "主機 WSL /srv/giga-files/test(UUID 命名)+ NAS 10.10.130.31 docker-folder/giga-files/test(每 5 分鐘補傳、SHA-256 驗證;NAS 未掛載時跳過);容量與備份狀態見 GigaItApp「檔案管理 › 儲存與備份」",
+      "stack": ["WSL2 ext4", "CIFS"],
+      "team": "IT",
+      "owner": "—",
+      "status": "active",
+      "links": { "repo": "giga-file-service/docs/STORAGE.md" },
+      "monitor": { "enabled": false }
+    },
+    {
+      "id": "bpm-attachments",
+      "name": "BPM 附件來源",
+      "type": "storage",
+      "layer": "data",
+      "description": "唯讀:BPM NaNa NoCmDocument(帳號 file_bpm_ro)+ 取檔服務 :5144(python_BPM190191檔案下載API);測試區 191 / 正式區 190 以 ?env= 切換。5144 可用性另有 CheckService 監看",
+      "stack": ["SQL Server", "FastAPI"],
+      "team": "BPM",
+      "owner": "—",
+      "status": "active",
+      "links": { "repo": "giga-file-service/docs/LEGACY-INVENTORY.md" },
+      "monitor": { "enabled": false }
     }
   ],
   "edges": [
@@ -254,6 +293,11 @@
     { "from": "endpoint-api", "to": "ita-redis", "label": "在線" },
     { "from": "endpoint-agent", "to": "ita-sqlserver", "label": "資料" },
     { "from": "endpoint-agent", "to": "ita-mongo", "label": "快照" },
-    { "from": "endpoint-agent", "to": "ita-redis", "label": "在線" }
+    { "from": "endpoint-agent", "to": "ita-redis", "label": "在線" },
+    { "from": "gw-bff", "to": "file-api", "label": "/api/file/*" },
+    { "from": "gw-nginx", "to": "file-api", "label": "上傳直送" },
+    { "from": "file-api", "to": "gw-sqlserver", "label": "file_svc" },
+    { "from": "file-api", "to": "file-storage", "label": "實體檔 / NAS" },
+    { "from": "file-api", "to": "bpm-attachments", "label": "BPM 附件(唯讀)" }
   ]
 }
