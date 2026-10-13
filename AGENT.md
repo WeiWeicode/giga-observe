@@ -55,6 +55,17 @@ Claude 把搜尋、審查、資安檢查、除錯、測試、重構交給子代�
 
 ---
 
+## Git 分支與推送 — 必讀
+
+同 `../giga-api-gateway-bff/AGENT.md` §10.10(有出入時以該節為準);同仁操作步驟見工作區 `../BackToNas/同仁開發指南.md`。
+
+- 開發在工作分支(`feature/*`、`fix/*`、`docs/*`、`refactor/*`),從最新的 `origin/develop` 開。目前在 `develop` / `main` 而任務要改檔時,**先詢問使用者要開哪個分支**,不要直接提交。
+- 只推送工作分支;`develop`、`main` **只透過 GitLab Merge Request 由 Maintainer 合併**。AI 不得推送 `develop` / `main`(使用者在本次對話明確指示且為 Maintainer 除外),不得 force push 或改寫已推送的提交;推送被拒時不找繞過方式。
+- **本 repo 部署**:目前沒有 CI,推送與合併都不會部署;仍依上列分支規則開發。
+- 提交前確認 diff 只含本次任務的檔案,不提交 `.env*` 與任何機密;提交訊息用 `<type>(<scope>): <中文說明>`。
+
+---
+
 ## 0. 專案一句話
 
 **DevOpsDiagram 是監控其他五個服務的維運平台** —— 它自己壞掉不能拖累任何被監控的服務。這個前提決定了本專案大部分的設計取捨，動手前請先理解第 9 章的鐵則。
