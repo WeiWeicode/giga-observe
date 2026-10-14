@@ -19,6 +19,22 @@
 
 ---
 
+## 2026-10-14｜架構圖加入員工入口網後端(portal-api)
+
+**需求來源**:架構觀測顯示「有服務在回報但未登錄到架構圖:portal-api」,需求方要求補上
+
+**內容**:拓樸新增 `portal-api`(員工入口網後端,探測 `http://portal-api:51271/healthz`)、`bpm-nana`(BPM 簽核資料庫:NaNa 唯讀帳號 portal_bpm_ro,191 / 190,不探測),與 3 條連線(`gw-bff → portal-api` /api/portal/*、`portal-api → gw-sqlserver` schema portal 與舊庫複本 src_*、`portal-api → bpm-nana` 待簽核唯讀)。**不需改 giga-observe 程式**
+
+**修改**:`backend/config/topology.json`
+
+**驗證**:backend 測試 110 通過;主機 2 更新拓樸、重啟 gno-backend 後載入 23 個服務、27 條連線
+
+**影響範圍**:portal-api 的 ingest Key 已於 giga-Portal 部署時建立(`/srv/giganexus/portal-secrets/monitor_api_key`)
+
+**文件同步**:OPERATIONS §4.1 Key 清單
+
+---
+
 ## 2026-10-08｜架構圖加入附件服務(giga-file-service)
 
 **需求來源**:架構觀測顯示「有服務在回報但未登錄到架構圖:file-api」,需求方要求補上
