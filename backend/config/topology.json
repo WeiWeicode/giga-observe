@@ -66,6 +66,19 @@
       "monitor": { "healthUrl": "http://itapp-api:51291/healthz", "enabled": true }
     },
     {
+      "id": "portal-api",
+      "name": "員工入口網後端",
+      "type": "backend",
+      "layer": "api",
+      "description": "giga-Portal portal-api(/api/portal/* 經 BFF):個人資料、通訊錄、課程、通勤調查、待簽核等;新表放 giganexus_gw_test schema portal,舊庫資料讀複本 src_*(人事 / TIPTOP 轉移中);BPM 待簽核唯讀直讀 NaNa",
+      "stack": ["Node.js 22", "Fastify 5", "Drizzle ORM", "SQL Server"],
+      "team": "IT",
+      "owner": "—",
+      "status": "active",
+      "links": { "repo": "giga-Portal/backend" },
+      "monitor": { "healthUrl": "http://portal-api:51271/healthz", "enabled": true }
+    },
+    {
       "id": "node-sample",
       "name": "後端樣本",
       "type": "backend",
@@ -261,6 +274,19 @@
       "monitor": { "enabled": false }
     },
     {
+      "id": "bpm-nana",
+      "name": "BPM 簽核資料庫",
+      "type": "database",
+      "layer": "data",
+      "description": "唯讀:BPM NaNa(帳號 portal_bpm_ro,只 SELECT Users、LocalToDoWorkItem、WorkItem、ProcessInstance);測試區 191 / 正式區 190;portal-api 第一次查詢才連線,連不上不影響啟動",
+      "stack": ["SQL Server"],
+      "team": "BPM",
+      "owner": "—",
+      "status": "active",
+      "links": { "repo": "giga-Portal/backend/src/modules/bpm" },
+      "monitor": { "enabled": false }
+    },
+    {
       "id": "bpm-attachments",
       "name": "BPM 附件來源",
       "type": "storage",
@@ -298,6 +324,9 @@
     { "from": "gw-nginx", "to": "file-api", "label": "上傳直送" },
     { "from": "file-api", "to": "gw-sqlserver", "label": "file_svc" },
     { "from": "file-api", "to": "file-storage", "label": "實體檔 / NAS" },
-    { "from": "file-api", "to": "bpm-attachments", "label": "BPM 附件(唯讀)" }
+    { "from": "file-api", "to": "bpm-attachments", "label": "BPM 附件(唯讀)" },
+    { "from": "gw-bff", "to": "portal-api", "label": "/api/portal/*" },
+    { "from": "portal-api", "to": "gw-sqlserver", "label": "portal / src_*" },
+    { "from": "portal-api", "to": "bpm-nana", "label": "待簽核(唯讀)" }
   ]
 }
