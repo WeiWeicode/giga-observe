@@ -61,6 +61,7 @@ Claude 把搜尋、審查、資安檢查、除錯、測試、重構交給子代�
 
 - 開發在工作分支(`feature/*`、`fix/*`、`docs/*`、`refactor/*`),從最新的 `origin/develop` 開。目前在 `develop` / `main` 而任務要改檔時,**先詢問使用者要開哪個分支**,不要直接提交。
 - 只推送工作分支;`develop`、`main` **只透過 GitLab Merge Request 由 Maintainer 合併**。AI 不得推送 `develop` / `main`(使用者在本次對話明確指示且為 Maintainer 除外),不得 force push 或改寫已推送的提交;推送被拒時不找繞過方式。
+- **多人協作**:開發新功能前先 `git fetch`,從最新的基準分支開分支;合併遇到衝突時 **AI 先停下**,不自行解衝突,列出衝突檔案與影響的功能 / 邏輯,由開發者告知專案擁有者討論後再處理;開 MR 用 `.gitlab/merge_request_templates/Default.md` 範本(工作區 `../AGENT.md` §9)。以 GitLab 為準,GitHub 只是專案擁有者個人備份。
 - **本 repo 部署**:目前沒有 CI,推送與合併都不會部署;仍依上列分支規則開發。
 - 提交前確認 diff 只含本次任務的檔案,不提交 `.env*` 與任何機密;提交訊息用 `<type>(<scope>): <中文說明>`。
 
