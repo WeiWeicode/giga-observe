@@ -27,6 +27,19 @@
       "monitor": { "healthUrl": "https://giganexus-test.gigasolar.com.tw/", "enabled": true }
     },
     {
+      "id": "netops-web",
+      "name": "資訊網通管理系統前端",
+      "type": "frontend",
+      "layer": "presentation",
+      "description": "NetOps 前端(Vue 3,/netops/;單一入口):PA-560 流量總覽、安全事件、Log 明細、FTP Log 檔案、AD 事件、網通知識庫;AI 問答仍在舊版 IIS(一般連結)",
+      "stack": ["Vue 3", "Vite", "@giganexus/web-kit"],
+      "team": "IT",
+      "owner": "—",
+      "status": "active",
+      "links": { "repo": "NetOps/frontend" },
+      "monitor": { "healthUrl": "https://giganexus-test.gigasolar.com.tw/netops/", "enabled": true }
+    },
+    {
       "id": "gw-nginx",
       "name": "Gateway Nginx",
       "type": "gateway",
@@ -77,6 +90,19 @@
       "status": "active",
       "links": { "repo": "giga-Portal/backend" },
       "monitor": { "healthUrl": "http://portal-api:51271/healthz", "enabled": true }
+    },
+    {
+      "id": "netops-api",
+      "name": "資訊網通管理系統後端",
+      "type": "backend",
+      "layer": "api",
+      "description": "NetOps netops-api(/api/netops/* 經 BFF):讀 FTP 上的 PA-560 / AD log 產生摘要與統計(原始 log 不存)、Log 明細查詢與匯出(工作模式)、網通知識庫;單一容器,背景同步在程序內",
+      "stack": ["Node.js 22", "Fastify 5"],
+      "team": "IT",
+      "owner": "—",
+      "status": "active",
+      "links": { "repo": "NetOps/backend" },
+      "monitor": { "healthUrl": "http://netops-api:51292/healthz", "enabled": true }
     },
     {
       "id": "node-sample",
@@ -274,6 +300,32 @@
       "monitor": { "enabled": false }
     },
     {
+      "id": "netops-ftp",
+      "name": "防火牆 / AD log FTP",
+      "type": "storage",
+      "layer": "data",
+      "description": "唯讀:FTP(PA-560 匯出的 TRAFFIC 等 log、網域控制站每天匯出的 AD 事件);netops-api 只讀不寫,測試區同時連線 1 條;舊版 IIS NetOps 也同步同一份",
+      "stack": ["FTP"],
+      "team": "IT",
+      "owner": "—",
+      "status": "active",
+      "links": { "repo": "NetOps/backend/src/infra/ftp" },
+      "monitor": { "enabled": false }
+    },
+    {
+      "id": "netops-data",
+      "name": "NetOps 資料目錄",
+      "type": "storage",
+      "layer": "data",
+      "description": "主機 WSL 資料目錄:log 摘要與統計、AD 事件、知識庫筆記(檔案,經 infra/store);知識庫每天備份到 NAS(netops-kb-backup,保留 30 份)",
+      "stack": ["WSL2 ext4", "CIFS"],
+      "team": "IT",
+      "owner": "—",
+      "status": "active",
+      "links": { "repo": "NetOps/docs/ARCHITECTURE.md" },
+      "monitor": { "enabled": false }
+    },
+    {
       "id": "bpm-nana",
       "name": "BPM 簽核資料庫",
       "type": "database",
@@ -327,6 +379,10 @@
     { "from": "file-api", "to": "bpm-attachments", "label": "BPM 附件(唯讀)" },
     { "from": "gw-bff", "to": "portal-api", "label": "/api/portal/*" },
     { "from": "portal-api", "to": "gw-sqlserver", "label": "portal / src_*" },
-    { "from": "portal-api", "to": "bpm-nana", "label": "待簽核(唯讀)" }
+    { "from": "portal-api", "to": "bpm-nana", "label": "待簽核(唯讀)" },
+    { "from": "netops-web", "to": "gw-nginx", "label": "HTTPS" },
+    { "from": "gw-bff", "to": "netops-api", "label": "/api/netops/*" },
+    { "from": "netops-api", "to": "netops-ftp", "label": "log(唯讀)" },
+    { "from": "netops-api", "to": "netops-data", "label": "摘要 / 知識庫" }
   ]
 }

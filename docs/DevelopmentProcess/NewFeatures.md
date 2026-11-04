@@ -19,6 +19,22 @@
 
 ---
 
+## 2026-11-04｜架構圖加入資訊網通管理系統(NetOps)
+
+**需求來源**:NetOps 接入 Gateway 的測試區部署(NetOps IMPL-PLAN D1):架構觀測要看得到 netops-api 的心跳與紀錄
+
+**內容**:拓樸新增 `netops-web`(前端 /netops/,web-kit `installMonitor({ app: 'netops-web' })`,探測測試區 `/netops/`)、`netops-api`(探測 `http://netops-api:51292/healthz`)、`netops-ftp`(log 來源 FTP,唯讀,不探測)、`netops-data`(資料目錄與知識庫 NAS 備份,不探測),與 4 條連線(`netops-web → gw-nginx`、`gw-bff → netops-api` /api/netops/*、`netops-api → netops-ftp`、`netops-api → netops-data`)。**不需改 giga-observe 程式**
+
+**修改**:`backend/config/topology.json`、`docs/OPERATIONS.md` §4.1 Key 清單
+
+**驗證**:backend 測試;主機 2 更新拓樸、重啟 gno-backend 後應載入 27 個服務、31 條連線(合併後執行)
+
+**影響範圍**:netops-api 的 ingest Key 由 NetOps `deploy/host2-set-secrets.sh` 建立(`/srv/giganexus/netops-secrets/monitor_api_key`)
+
+**文件同步**:OPERATIONS §4.1 Key 清單
+
+---
+
 ## 2026-10-14｜架構圖加入員工入口網後端(portal-api)
 
 **需求來源**:架構觀測顯示「有服務在回報但未登錄到架構圖:portal-api」,需求方要求補上
