@@ -99,3 +99,6 @@ data/*/
 !data/mongo/
 !data/redis/
 backup/archives/*/
+
+# CodeGraph 本機索引
+.codegraph/
