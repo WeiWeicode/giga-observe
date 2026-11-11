@@ -7,6 +7,62 @@
 
 ---
 
+## AI 分工(Claude / Gemini)— 必讀
+
+同 `../giga-api-gateway-bff/AGENT.md` §10.8(有出入時以該節為準)。
+
+**Claude** 負責前後端,著重在邏輯、框架、架構規劃與寫計畫:後端全部、前端的邏輯層、測試、技術文件。**Gemini** 負責前端的頁面與元件、寫需求企劃,以及執行測試、撰寫測試報告。Gemini 開始動手前,先確認工作在下表 Gemini 欄是 ✅。
+
+| 工作 | Claude | Gemini |
+| --- | --- | --- |
+| 後端程式(API、業務邏輯、權限、資料存取、排程、修 bug、重構) | ✅ | ❌ |
+| 前端邏輯層:`composables/`(狀態與邏輯)、`api/`(HTTP)、store、路由與路由守衛、權限判斷、`@giganexus/*` 共用套件 | ✅ | ❌ |
+| 前端頁面與元件:`pages/`、`components/` / `ui/` 的畫面組合、版面、樣式、互動、文案、mock / 假資料 | ✅ | ✅ |
+| 架構與框架:新模組、目錄慣例、選用套件、共用元件與 composable 的介面設計 | ✅ | ❌ |
+| 寫計畫與技術文件:`ARCHITECTURE.md`、`IMPL-PLAN.md`、`HANDOFF.md`、`PROJECT-MAP.md`、`AGENT.md`、`README.md`、架構 JSON、修正紀錄 | ✅ | ❌ |
+| 寫需求企劃:`docs/PRD.md`、功能企劃、`docs/Gherkin/*.feature` 驗收場景 | ✅ | ✅ |
+| 後端測試、前端邏輯層測試、整合 / E2E 測試、測試用 fixture 的邏輯 | ✅ | ❌ |
+| 前端元件測試(Gemini 負責的頁面 / 元件) | ✅ | ✅ |
+| 執行測試(既有的 `npm test`、`test:int`、E2E、`cargo test` 等)並撰寫測試報告 | ✅ | ✅ |
+| CI/CD 與容器、部署設定 | ✅ | ❌ **禁止** |
+
+**Gemini 寫前端頁面與元件**:
+
+- 資料與狀態一律用既有的 `composables/`、`api/`;頁面不直接 `fetch`、不自己寫權限判斷(Gateway `AGENT.md` §10.7.2)。需要新的 API 呼叫、狀態、權限代碼或路由時,寫在 MR 說明交給 Claude。
+- 權限代碼、路由、錯誤代碼以 Gateway `docs/` 為準,不自創。
+- 新增頁面或元件時,可在 `docs/PROJECT-MAP.md` 補上該頁面 / 元件那一行;其他段落由 Claude 維護。
+
+**Gemini 寫需求企劃**:只描述需求、畫面與驗收行為。API 介面、權限代碼、錯誤代碼、資料表屬技術設計,企劃中需要時列為「待決事項」交給 Claude,不直接定案。
+
+**Gemini 禁止修改**(即使只改一行):
+
+- CI/CD:`.gitlab-ci.yml`、`ci-templates/`、Runner 設定。
+- 容器與部署:`Dockerfile*`、`docker-compose*`、`.dockerignore`、`deploy/`、`nginx/`、部署腳本、`.env*`、`Web.config` / 發佈設定。
+- 相依與建置設定:`package.json`(含 scripts)、lock 檔、`Cargo.toml`、`tsconfig*.json`、`vite.config.*`。
+- 資料庫:schema、migration、seed。
+- 後端程式與前端邏輯層(見上表)。
+- 測試:只能新增 / 修改自己負責頁面的元件測試。測試失敗時**不得**為了讓測試通過而修改測試或程式、跳過測試、調整門檻;把失敗寫進報告,交給 Claude 處理。
+
+**測試報告**(Gemini 執行測試後必寫):
+
+- 位置:該 repo 的 `docs/test-reports/YYYY-MM-DD-<主題>.md`。
+- 內容:1. 環境(分支 / commit、部署區、執行的指令)2. 結果(通過 / 失敗 / 略過數量)3. 失敗項目(測試名稱、錯誤訊息摘錄)4. **可能問題**:推測原因、相關檔案與行號、重現步驟、影響範圍 5. 建議交給 Claude 處理的項目。
+- 測試全部通過也要寫,並列出觀察到的潛在風險(警告訊息、偶發失敗、執行過慢等)。
+
+**判斷不了屬於頁面 / 元件還是邏輯時,一律視為邏輯**:不動程式,寫進 MR 說明或報告交給 Claude。
+
+---
+
+## 找程式碼:CodeGraph 優先 — 必讀
+
+同 `../giga-api-gateway-bff/AGENT.md` §10.7(有出入時以該節為準)。
+
+- repo 根目錄有 `.codegraph/`(CodeGraph 索引)時,找檔案、符號、呼叫關係與修改的影響範圍**先用 CodeGraph**:Claude Code 用 MCP 工具 `codegraph_explore`;其他 AI 或人在 repo 根目錄執行 `codegraph explore "<符號名稱或問題>"`。
+- CodeGraph 找不到(剛新增尚未索引的檔案、設定檔與文件不在索引內),或要看目錄職責與「要改 X → 看哪裡」時,再看 `docs/PROJECT-MAP.md`。
+- 沒有 `.codegraph/` 時直接看專案地圖;是否建立索引由使用者決定。`.codegraph/` 是本機索引,不進版控(列在 `.gitignore`)。
+
+---
+
 ## Claude 子代理 — 必讀
 
 同 `../giga-api-gateway-bff/AGENT.md` §10.9(有出入時以該節為準)。**只適用 Claude Code**,Gemini 等其他 AI 略過本節。
