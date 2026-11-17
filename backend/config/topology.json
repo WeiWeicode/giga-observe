@@ -31,7 +31,7 @@
       "name": "資訊網通管理系統前端",
       "type": "frontend",
       "layer": "presentation",
-      "description": "NetOps 前端(Vue 3,/netops/;單一入口):PA-560 流量總覽、安全事件、Log 明細、FTP Log 檔案、AD 事件、網通知識庫;AI 問答仍在舊版 IIS(一般連結)",
+      "description": "NetOps 前端(Vue 3,/netops/;單一入口):即時監控戰情室(粒子流向圖、AI 每小時分析、高風險統計)、PA-560 流量總覽、安全事件、Log 明細、AD 事件、網通知識庫、AI 問答",
       "stack": ["Vue 3", "Vite", "@giganexus/web-kit"],
       "team": "IT",
       "owner": "—",
@@ -96,7 +96,7 @@
       "name": "資訊網通管理系統後端",
       "type": "backend",
       "layer": "api",
-      "description": "NetOps netops-api(/api/netops/* 經 BFF):讀 FTP 上的 PA-560 / AD log 產生摘要與統計(原始 log 不存)、Log 明細查詢與匯出(工作模式)、網通知識庫;單一容器,背景同步在程序內",
+      "description": "NetOps netops-api(/api/netops/* 經 BFF):PA-560 流量總覽、安全事件、Log 明細(ClickHouse)、即時監控戰情室(Redis 即時統計、離線 DB-IP 國家對照、網段設定檔)、AI 分析與每小時分析(AI 主機)、AD 事件、網通知識庫;單一容器,背景同步在程序內",
       "stack": ["Node.js 22", "Fastify 5"],
       "team": "IT",
       "owner": "—",
@@ -326,6 +326,71 @@
       "monitor": { "enabled": false }
     },
     {
+      "id": "netops-pa",
+      "name": "PA 即時收集器",
+      "type": "backend",
+      "layer": "service",
+      "description": "NetOps netops-pa:pan-os-python 唯讀輪詢 PA-560(Session、CPU、吞吐量、介面)並接收 HTTP / Syslog log 轉送,寫入 netops-redis(TRAFFIC 明細 1 小時、統計 1 天,其他 2 天)",
+      "stack": ["Python", "pan-os-python"],
+      "team": "IT",
+      "owner": "—",
+      "status": "active",
+      "links": { "repo": "NetOps/netops-pa" },
+      "monitor": { "enabled": false }
+    },
+    {
+      "id": "netops-ingest",
+      "name": "PA log 寫入與歸檔",
+      "type": "devops",
+      "layer": "service",
+      "description": "NetOps netops-ingest:從 Redis Stream 讀 PA log 批次寫入 ClickHouse(TRAFFIC 與威脅類),冷資料 Parquet 歸檔到 NAS",
+      "stack": ["Node.js 22"],
+      "team": "IT",
+      "owner": "—",
+      "status": "active",
+      "links": { "repo": "NetOps/backend" },
+      "monitor": { "enabled": false }
+    },
+    {
+      "id": "netops-redis",
+      "name": "NetOps 即時資料",
+      "type": "cache",
+      "layer": "data",
+      "description": "netops-redis:PA 即時監控資料(收集器寫入、netops-api 唯讀查詢、戰情室聚合快取)",
+      "stack": ["Redis 7"],
+      "team": "IT",
+      "owner": "—",
+      "status": "active",
+      "links": { "repo": "NetOps/deploy" },
+      "monitor": { "enabled": false }
+    },
+    {
+      "id": "netops-clickhouse",
+      "name": "PA log 資料庫",
+      "type": "database",
+      "layer": "data",
+      "description": "netops-clickhouse:PA TRAFFIC(30 天)與威脅類(90 天)原始 log、每小時彙總;netops-api 用唯讀帳號",
+      "stack": ["ClickHouse"],
+      "team": "IT",
+      "owner": "—",
+      "status": "active",
+      "links": { "repo": "NetOps/deploy/clickhouse" },
+      "monitor": { "enabled": false }
+    },
+    {
+      "id": "ai-host",
+      "name": "AI 主機",
+      "type": "backend",
+      "layer": "service",
+      "description": "OpenAI 相容 API(10.10.130.46,備援 .45):Qwen3.6-35B-A3B 模型與 embedding;NetOps AI 分析只送彙整統計",
+      "stack": ["vLLM", "Qwen3.6"],
+      "team": "IT",
+      "owner": "—",
+      "status": "active",
+      "links": { "repo": "—" },
+      "monitor": { "enabled": false }
+    },
+    {
       "id": "bpm-nana",
       "name": "BPM 簽核資料庫",
       "type": "database",
@@ -383,6 +448,12 @@
     { "from": "netops-web", "to": "gw-nginx", "label": "HTTPS" },
     { "from": "gw-bff", "to": "netops-api", "label": "/api/netops/*" },
     { "from": "netops-api", "to": "netops-ftp", "label": "log(唯讀)" },
-    { "from": "netops-api", "to": "netops-data", "label": "摘要 / 知識庫" }
+    { "from": "netops-api", "to": "netops-data", "label": "摘要 / 知識庫" },
+    { "from": "netops-pa", "to": "netops-redis", "label": "即時統計" },
+    { "from": "netops-api", "to": "netops-redis", "label": "即時監控(唯讀)" },
+    { "from": "netops-ingest", "to": "netops-redis", "label": "Stream" },
+    { "from": "netops-ingest", "to": "netops-clickhouse", "label": "寫入" },
+    { "from": "netops-api", "to": "netops-clickhouse", "label": "查詢(唯讀)" },
+    { "from": "netops-api", "to": "ai-host", "label": "AI 分析" }
   ]
 }
